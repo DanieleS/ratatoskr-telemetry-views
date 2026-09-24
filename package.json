@@ -8,8 +8,9 @@
     "dev": "vite",
     "sync-contracts": "node scripts/sync-contracts.mjs",
     "gen-types": "node scripts/gen-types.mjs",
-    "build": "vite build",
-    "typecheck": "vue-tsc --noEmit"
+    "build": "node scripts/build.mjs",
+    "typecheck": "vue-tsc --noEmit",
+    "push": "npm run build && ./scripts/push.sh"
   },
   "dependencies": {
     "vue": "^3.5.13"

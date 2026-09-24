@@ -1,23 +1,29 @@
 /**
  * The stand-in for Ratatoskr, so the view can be built in a browser.
  *
- * It drives the real contract — `window.scry.onFrame` — with a real capture: `scry watch` writes one
- * JSON object per event, and fixtures/seaofstars.extracted.json is exactly that, an `attached` event
- * followed by one full `values` event. Everything after the first snapshot is invented, because a
- * one-tick capture cannot show a health bar moving.
+ * It drives the real bridge — `window.scry.onFrame` — with a real capture: `scry watch` writes one
+ * JSON object per event, and the fixture vendored from scry-profiles is exactly that, an `attached`
+ * event followed by one full `values` event. Everything after the first snapshot is invented, because
+ * a one-tick capture cannot show a health bar moving.
+ *
+ * The capture predates `contract` on the wire (it was recorded with scry 0.1.0-alpha.2), so the
+ * harness announces the contract version the fixture is filed under, as a current host would.
  *
  * Excluded from the production build (see main.ts). A view has no business being able to make up
  * telemetry on a device.
  */
-import capture from '../../fixtures/seaofstars.extracted.json?raw';
-import attachedMeta from '../../fixtures/seaofstars.gen.json';
+import capture from '../../../fixtures/sea-of-stars/2.0/steam-first-tick.json?raw';
+import manifest from '../manifest.json';
+import type { Values } from '../stream';
+
+/** The version directory the capture is filed under in fixtures/. */
+const CAPTURE_VERSION = '2.0';
 
 interface Event {
   event?: string;
-  values?: Record<string, unknown>;
+  values?: Partial<Values>;
   process?: string;
   profile?: string;
-  contract_version?: number;
 }
 
 /**
@@ -68,7 +74,8 @@ if (!first?.values) {
 }
 
 /** The live picture the harness mutates. Starts as the captured one. */
-const live: Record<string, unknown> = structuredClone(first.values);
+const live: Partial<Values> = structuredClone(first.values);
+const initialParty = first.values.party ?? [];
 
 function frame(kind: 'snapshot' | 'diff' | 'detached', body: unknown) {
   // Through the same door the app uses, quoted-and-parsed included, so the harness cannot
@@ -81,35 +88,25 @@ function snapshot(isAttached = true) {
     attached: isAttached,
     slug: 'Sea of Stars',
     process: attached?.process ?? 'SeaOfStars.exe',
-    profile: attached?.profile ?? attachedMeta.label,
-    contract: attached?.contract_version ?? attachedMeta.contractVersion,
+    profile: attached?.profile ?? null,
+    contract: { id: manifest.contract.id, version: CAPTURE_VERSION },
     values: isAttached ? live : {},
   });
 }
 
-function diff(patch: Record<string, unknown>) {
+function diff(patch: Partial<Values>) {
   Object.assign(live, patch);
   frame('diff', patch);
 }
 
 // --- a small script, so every scene gets exercised without anyone touching a keyboard ------------
 
-interface RawCharacter {
-  id: string;
-  hp: number | null;
-  sp: number | null;
-}
-
-function characters(): RawCharacter[] {
-  return structuredClone(live['characters']) as RawCharacter[];
-}
-
 function hurt(id: string, amount: number) {
-  const roster = characters();
-  const target = roster.find((one) => one.id === id);
+  const roster = structuredClone(live.characters ?? []);
+  const target = roster.find((one) => one?.id === id);
   if (!target || target.hp == null) return;
   target.hp = Math.max(0, target.hp - amount);
-  diff({ characters: roster, roster_hp_total: roster.reduce((sum, one) => sum + (one.hp ?? 0), 0) });
+  diff({ characters: roster, roster_hp_total: roster.reduce((sum, one) => sum + (one?.hp ?? 0), 0) });
 }
 
 function heal(id: string, amount: number) {
@@ -140,7 +137,7 @@ function run() {
   timeline = [];
 
   // Starts on the title screen: no party, which is exactly what the game reports there.
-  const fullParty = structuredClone(live['party']);
+  const fullParty = structuredClone(live.party ?? []);
   diff({ party: [], combat_party: [] });
   snapshot();
 
@@ -185,7 +182,7 @@ run();
 const KEYS: Record<string, () => void> = {
   '1': () => diff({ party: [], combat_party: [], in_combat: 0 }),
   '2': () => {
-    const ids = (structuredClone(first!.values!['party']) as string[]) ?? [];
+    const ids = structuredClone(initialParty);
     diff({ party: ids, combat_party: ids, in_combat: 0, enemies: null });
   },
   '3': startBattle,

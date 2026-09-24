@@ -1,0 +1,4 @@
+{
+  "title": "Sea of Stars",
+  "contract": { "id": "sea-of-stars", "range": "^2.0" }
+}

@@ -4,100 +4,107 @@
  * Everything the components render comes from here, so all the profile's quirks are dealt with in one
  * place: the derived arrays that are index-aligned to `characters`, the max-HP watches that only
  * exist for the three starting characters, the combo counter that is stored in thousandths.
+ *
+ * The shapes are the contract's generated types, and they say what the stream really does: every
+ * value, every record field and every collection entry may be `null`. Nothing here asserts
+ * otherwise; each read decides what an unreadable value means for the thing being drawn.
  */
 import { computed, ref, watch } from 'vue';
-import { meta, previous, pulses, values } from '../scry/store';
+import { meta, previous, pulses, values, type Values } from '../stream';
 import { prettify } from './labels';
 import { characterMeta, characterTitle, type Sigil } from './characters';
 
-// --- raw shapes, exactly as the profile reports them -------------------------------------------
+// --- raw shapes, exactly as the contract describes them ----------------------------------------
 
-interface RawCharacter {
-  id: string;
-  class_id: string | null;
-  hp: number | null;
-  sp: number | null;
-  base_hp: number | null;
-  base_sp: number | null;
-  base_patk: number | null;
-  base_pdef: number | null;
-  base_matk: number | null;
-  base_mdef: number | null;
-  boost_level: number | null;
-  weapon: string | null;
-  armor: string | null;
-  trinket_1: string | null;
-  trinket_2: string | null;
-  group_trinket: string | null;
-  weapon_patk: number | null;
-  weapon_matk: number | null;
-  armor_pdef: number | null;
-  armor_mdef: number | null;
-}
+/** The element type of an array-valued watch. */
+type Element<T> = T extends readonly (infer E)[] ? E : never;
+/** One entry of a collection watch, with the "unreadable element" case taken out. */
+type Entry<K extends keyof Values> = NonNullable<Element<NonNullable<Values[K]>>>;
 
-interface RawEnemy {
-  label: string | null;
-  hp: number | null;
-  max_hp: number | null;
-  level: number | null;
-  patk: number | null;
-  pdef: number | null;
-  matk: number | null;
-  mdef: number | null;
-}
-
-interface RawMod {
-  kind: string | null;
-  stat: number;
-  amount: number;
-}
-
-interface RawUpgrade {
-  stat: number;
-  count: number;
-}
+type RawCharacter = Entry<'characters'>;
+type RawEnemy = Entry<'enemies'>;
+type RawMod = Entry<'zale_trinket0_mods'>;
+type RawUpgrade = Entry<'zale_upgrades'>;
 
 // --- typed reads ------------------------------------------------------------------------------
 
-/** A watch that is absent and a watch that went unreadable both read as null here. */
-function number(name: string): number | null {
-  const value = values[name];
-  return typeof value === 'number' ? value : null;
+/**
+ * A collection's entries, keeping each one's position. Positions matter here: the derived
+ * `attack_rating` and `defense_rating` are index-aligned to `characters`, and enemies are compared
+ * slot by slot. An unreadable entry is `null` and is dropped *after* its index is taken, so it
+ * never shifts its neighbours.
+ */
+function entries<T>(list: readonly (T | null)[] | null | undefined): Array<{ raw: T; index: number }> {
+  const out: Array<{ raw: T; index: number }> = [];
+  (list ?? []).forEach((raw, index) => {
+    if (raw != null) out.push({ raw, index });
+  });
+  return out;
 }
 
-function list<T>(name: string): T[] {
-  const value = values[name];
-  return Array.isArray(value) ? (value as T[]) : [];
+/** A list watch with its unreadable entries removed, for lists whose positions mean nothing. */
+function known<T>(list: readonly (T | null)[] | null | undefined): T[] {
+  return (list ?? []).filter((item): item is T => item != null);
 }
 
-function record<T>(name: string): T | null {
-  const value = values[name];
-  return value && typeof value === 'object' && !Array.isArray(value) ? (value as T) : null;
+/** `in_combat`, `paused` and friends are integer flags, not booleans. */
+function flag(value: number | null | undefined): boolean {
+  return (value ?? 0) !== 0;
 }
 
-function text(name: string): string | null {
-  const value = values[name];
-  return typeof value === 'string' ? value : null;
-}
-
-/** `in_combat`, `paused` and friends are i32 flags, not booleans. */
-function flag(name: string): boolean {
-  return (number(name) ?? 0) !== 0;
-}
+/**
+ * The watches the profile derives for the three starting characters only. They are separate watches
+ * per character (`zale_max_hp`, …), so they are listed rather than built from the id: a name the
+ * contract does not have would not compile.
+ */
+const PER_CHARACTER: Record<string, () => {
+  maxHp: number | null | undefined;
+  maxSp: number | null | undefined;
+  mods: [RawMod | null, 'trinket_1' | 'trinket_2'][];
+  upgrades: readonly (RawUpgrade | null)[] | null | undefined;
+}> = {
+  ZALE: () => ({
+    maxHp: values.zale_max_hp,
+    maxSp: values.zale_max_sp,
+    mods: [
+      ...(values.zale_trinket0_mods ?? []).map((mod): [RawMod | null, 'trinket_1'] => [mod, 'trinket_1']),
+      ...(values.zale_trinket1_mods ?? []).map((mod): [RawMod | null, 'trinket_2'] => [mod, 'trinket_2']),
+    ],
+    upgrades: values.zale_upgrades,
+  }),
+  VALERE: () => ({
+    maxHp: values.valere_max_hp,
+    maxSp: values.valere_max_sp,
+    mods: [
+      ...(values.valere_trinket0_mods ?? []).map((mod): [RawMod | null, 'trinket_1'] => [mod, 'trinket_1']),
+      ...(values.valere_trinket1_mods ?? []).map((mod): [RawMod | null, 'trinket_2'] => [mod, 'trinket_2']),
+    ],
+    upgrades: values.valere_upgrades,
+  }),
+  GARL: () => ({
+    maxHp: values.garl_max_hp,
+    maxSp: values.garl_max_sp,
+    mods: [
+      ...(values.garl_trinket0_mods ?? []).map((mod): [RawMod | null, 'trinket_1'] => [mod, 'trinket_1']),
+      ...(values.garl_trinket1_mods ?? []).map((mod): [RawMod | null, 'trinket_2'] => [mod, 'trinket_2']),
+    ],
+    upgrades: values.garl_upgrades,
+  }),
+};
 
 // --- world ------------------------------------------------------------------------------------
 
 export const world = computed(() => {
-  const guid = text('level_guid');
-  const levels = list<{ guid: string; label: string | null; level_id: string | null }>('levels');
+  const guid = values.level_guid;
+  const levels = known(values.levels);
   const here = guid ? levels.find((level) => level.guid === guid) : undefined;
   return {
     /** Some level labels arrive already readable ("Lucent"), others as keys. prettify takes both. */
     location: prettify(here?.label ?? here?.level_id ?? null),
-    inCombat: flag('in_combat'),
-    paused: flag('paused'),
-    cutscenes: number('cutscene_count') ?? 0,
-    dialogs: number('dialog_boxes') ?? 0,
+    inCombat: flag(values.in_combat),
+    paused: flag(values.paused),
+    cutscenes: values.cutscene_count ?? 0,
+    dialogs: values.dialog_boxes ?? 0,
     knownLevels: levels.length,
   };
 });
@@ -110,6 +117,20 @@ export interface Equipment {
   label: string;
   /** What the piece contributes, when the profile reports it. */
   detail: string;
+}
+
+/** A trinket modifier that could be read well enough to say what it does. */
+export interface Mod {
+  kind: string | null;
+  stat: number;
+  amount: number;
+  /** The trinket it comes from, already prettified. */
+  source: string;
+}
+
+export interface Upgrade {
+  stat: number;
+  count: number;
 }
 
 export interface Member {
@@ -132,8 +153,8 @@ export interface Member {
   matk: number | null;
   mdef: number | null;
   equipment: Equipment[];
-  mods: Array<RawMod & { source: string }>;
-  upgrades: RawUpgrade[];
+  mods: Mod[];
+  upgrades: Upgrade[];
   isLeader: boolean;
   /** Bumped whenever HP was reported changed, and whether that change was downward. */
   hpPulse: number;
@@ -184,11 +205,11 @@ function equipmentOf(raw: RawCharacter): Equipment[] {
   return pieces;
 }
 
-function memberOf(raw: RawCharacter, index: number): Member {
-  const key = raw.id.toLowerCase();
+function memberOf(raw: RawCharacter & { id: string }, index: number): Member {
   const info = characterMeta(raw.id);
-  const attack = list<number | null>('attack_rating')[index] ?? null;
-  const defense = list<number | null>('defense_rating')[index] ?? null;
+  const derived = PER_CHARACTER[raw.id.toUpperCase()]?.();
+  const attack = values.attack_rating?.[index] ?? null;
+  const defense = values.defense_rating?.[index] ?? null;
 
   // The profile derives physical attack and defence but not their magical twins, so the view adds
   // them the same way: base plus whatever the equipped piece contributes.
@@ -197,11 +218,22 @@ function memberOf(raw: RawCharacter, index: number): Member {
   const magicDefense =
     raw.base_mdef == null ? null : raw.base_mdef + (raw.armor_mdef ?? 0);
 
-  const before = previous[`characters`];
-  let falling = false;
-  if (Array.isArray(before)) {
-    const was = (before as RawCharacter[]).find((entry) => entry.id === raw.id);
-    falling = was?.hp != null && raw.hp != null && raw.hp < was.hp;
+  const was = previous.characters?.find((entry) => entry?.id === raw.id);
+  const falling = was?.hp != null && raw.hp != null && raw.hp < was.hp;
+
+  // A modifier or upgrade with an unreadable stat or amount has nothing to say, so it is left out
+  // rather than drawn as a guess.
+  const mods: Mod[] = [];
+  for (const [mod, slot] of derived?.mods ?? []) {
+    if (mod?.stat != null && mod.amount != null) {
+      mods.push({ kind: mod.kind, stat: mod.stat, amount: mod.amount, source: prettify(raw[slot]) });
+    }
+  }
+  const upgrades: Upgrade[] = [];
+  for (const upgrade of known(derived?.upgrades)) {
+    if (upgrade.stat != null && upgrade.count != null && upgrade.count > 0) {
+      upgrades.push({ stat: upgrade.stat, count: upgrade.count });
+    }
   }
 
   return {
@@ -211,36 +243,39 @@ function memberOf(raw: RawCharacter, index: number): Member {
     sigil: info.sigil,
     accent: info.accent,
     hp: raw.hp,
-    maxHp: number(`${key}_max_hp`),
+    maxHp: derived?.maxHp ?? null,
     sp: raw.sp,
-    maxSp: number(`${key}_max_sp`),
+    maxSp: derived?.maxSp ?? null,
     boost: raw.boost_level ?? 0,
     atk: attack,
     def: defense,
     matk: magicAttack,
     mdef: magicDefense,
     equipment: equipmentOf(raw),
-    mods: [
-      ...list<RawMod>(`${key}_trinket0_mods`).map((mod) => ({ ...mod, source: prettify(raw.trinket_1) })),
-      ...list<RawMod>(`${key}_trinket1_mods`).map((mod) => ({ ...mod, source: prettify(raw.trinket_2) })),
-    ],
-    upgrades: list<RawUpgrade>(`${key}_upgrades`).filter((upgrade) => upgrade.count > 0),
-    isLeader: text('leader') === raw.id,
+    mods,
+    upgrades,
+    isLeader: values.leader === raw.id,
     // `characters` is one watch, so any member's HP moving pulses all of them. Good enough for a
     // flash; the falling flag above is what decides whether it reads as damage.
-    hpPulse: pulses['characters'] ?? 0,
+    hpPulse: pulses.characters ?? 0,
     hpFalling: falling,
   };
 }
 
-/** Everyone the game knows about, in the profile's order. */
+/**
+ * Everyone the game knows about, in the profile's order. A character whose id could not be read is
+ * left out: without an id it cannot be matched to the party, named, or told apart from the others.
+ */
 export const roster = computed<Member[]>(() =>
-  list<RawCharacter>('characters').map((raw, index) => memberOf(raw, index)),
+  entries(values.characters).flatMap(({ raw, index }) => {
+    const id = raw.id;
+    return id ? [memberOf({ ...raw, id }, index)] : [];
+  }),
 );
 
 /** The active party, in the game's own order. */
 export const party = computed<Member[]>(() => {
-  const ids = list<string>('party');
+  const ids = known(values.party);
   const everyone = roster.value;
   return ids
     .map((id) => everyone.find((member) => member.id === id))
@@ -248,12 +283,12 @@ export const party = computed<Member[]>(() => {
 });
 
 export const progress = computed(() => {
-  const raw = record<{ level: number; total_xp: number; unspent_xp: number }>('party_progress');
+  const raw = values.party_progress;
   return {
     level: raw?.level ?? null,
     totalXp: raw?.total_xp ?? null,
     unspentXp: raw?.unspent_xp ?? null,
-    step: record<Record<string, number>>('upgrade_step'),
+    step: values.upgrade_step ?? null,
     /**
      * Both roster watches sum over the *whole* `characters` collection — all nine entries, including
      * characters who have not joined and two 280 HP entries that look like scripted fights. So this
@@ -261,9 +296,10 @@ export const progress = computed(() => {
      * character sitting at zero who is nowhere near the fight. Useful, but not what "the party" means:
      * anything about the people actually playing comes from `partyVitals` below.
      */
-    rosterHp: number('roster_hp_total'),
-    rosterDowned: number('roster_downed') ?? 0,
-    rosterSize: roster.value.length,
+    rosterHp: values.roster_hp_total ?? null,
+    rosterDowned: values.roster_downed ?? 0,
+    // The collection's own length, unreadable entries included: it is how many the game holds.
+    rosterSize: values.characters?.length ?? 0,
   };
 });
 
@@ -284,9 +320,7 @@ export const partyVitals = computed(() => {
 });
 
 export const resources = computed(() => {
-  const raw = record<{ combo_points: number; max_combo_points: number; ult_points: number }>(
-    'party_resources',
-  );
+  const raw = values.party_resources;
   const max = raw?.max_combo_points ?? 0;
   const stored = raw?.combo_points ?? 0;
   // One snapshot showed 3000 against a max of 3, so the counter looks like thousandths. Scaling only
@@ -301,10 +335,9 @@ export const resources = computed(() => {
 
 /** Present only in battle. The watch reads null the rest of the time. */
 export const enemies = computed(() => {
-  const before = previous['enemies'];
-  const was = Array.isArray(before) ? (before as RawEnemy[]) : null;
+  const was = previous.enemies;
 
-  return list<RawEnemy>('enemies').map((raw, index) => ({
+  return entries(values.enemies).map(({ raw, index }) => ({
     name: prettify(raw.label),
     hp: raw.hp,
     maxHp: raw.max_hp,
@@ -318,15 +351,15 @@ export const enemies = computed(() => {
      * two of the same monster are two entries with the same label. A slot that changed identity
      * between frames simply does not read as damage.
      */
-    falling: (() => {
-      const previousEntry = was?.[index];
+    falling: ((): boolean => {
+      const previousEntry: RawEnemy | null | undefined = was?.[index];
       if (!previousEntry || previousEntry.label !== raw.label) return false;
       return previousEntry.hp != null && raw.hp != null && raw.hp < previousEntry.hp;
     })(),
   }));
 });
 
-export const encounterXp = computed(() => number('encounter_xp'));
+export const encounterXp = computed(() => values.encounter_xp ?? null);
 
 // --- inventory --------------------------------------------------------------------------------
 
@@ -364,19 +397,17 @@ const KIND_ORDER = [
 ];
 
 export const inventory = computed(() => {
-  const catalog = new Map(
-    list<{ guid: string; kind: string; label: string }>('item_catalog').map((entry) => [
-      entry.guid,
-      entry,
-    ]),
-  );
-  const groups = new Map<string, Array<{ name: string; qty: number }>>();
+  const catalog = new Map<string, Entry<'item_catalog'>>();
+  for (const entry of known(values.item_catalog)) {
+    if (entry.guid) catalog.set(entry.guid, entry);
+  }
+  const groups = new Map<string, Array<{ name: string; qty: number | null }>>();
 
-  for (const held of list<{ guid: string; qty: number }>('inventory')) {
-    const entry = catalog.get(held.guid);
+  for (const held of known(values.inventory)) {
+    const entry = held.guid ? catalog.get(held.guid) : undefined;
     // An item held but absent from the catalogue would be a profile bug; show it rather than hide it.
     const kind = entry?.kind ?? 'KeyItem';
-    const name = entry ? prettify(entry.label) : held.guid.slice(0, 8);
+    const name = entry ? prettify(entry.label) : (held.guid ?? '?').slice(0, 8);
     const bucket = groups.get(kind) ?? [];
     bucket.push({ name, qty: held.qty });
     groups.set(kind, bucket);
@@ -396,14 +427,6 @@ export const inventory = computed(() => {
       items: items.sort((a, b) => a.name.localeCompare(b.name)),
     }));
 });
-
-// --- gold, when it exists ---------------------------------------------------------------------
-
-/**
- * The profile has no gold watch yet. The header is built to show one the day it appears, and to show
- * unspent XP until then, so nothing has to be redesigned for it.
- */
-export const gold = computed(() => number('gold'));
 
 // --- which scene the panel is showing ---------------------------------------------------------
 

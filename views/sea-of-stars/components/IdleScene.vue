@@ -8,7 +8,11 @@
  */
 import { computed } from 'vue';
 import Panel from './Panel.vue';
-import { meta } from '../scry/store';
+import { meta } from '../stream';
+
+const contract = computed(() =>
+  meta.contract ? `${meta.contract.id} ${meta.contract.version}` : null,
+);
 
 const state = computed(() => {
   if (meta.gone) return 'The voyage ends here.';
@@ -40,7 +44,7 @@ const state = computed(() => {
     <Panel tight class="diag">
       <div class="cell"><span class="label">Process</span><span class="value">{{ meta.process ?? '—' }}</span></div>
       <div class="cell"><span class="label">Game</span><span class="value">{{ meta.slug ?? '—' }}</span></div>
-      <div class="cell"><span class="label">Contract</span><span class="value">{{ meta.contract ?? '—' }}</span></div>
+      <div class="cell"><span class="label">Contract</span><span class="value">{{ contract ?? '—' }}</span></div>
       <div class="cell"><span class="label">Frames</span><span class="value">{{ meta.frames }}</span></div>
     </Panel>
   </div>

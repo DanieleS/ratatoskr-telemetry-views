@@ -3,21 +3,27 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Telemetry views for Ratatoskr's companion panel. Each view builds to one self-contained HTML file.",
+  "description": "Ratatoskr's telemetry views. Each view draws one scry contract and builds to one self-contained HTML file.",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/name.mjs",
-    "push": "npm run build && ./scripts/push.sh",
+    "sync-contracts": "node scripts/sync-contracts.mjs",
+    "gen-types": "node scripts/gen-types.mjs",
+    "build": "vite build",
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
     "vue": "^3.5.13"
   },
   "devDependencies": {
+    "@types/node": "^24.13.6",
     "@vitejs/plugin-vue": "^5.2.1",
+    "json-schema-to-typescript": "^15.0.4",
     "typescript": "^5.7.2",
     "vite": "^6.0.7",
     "vite-plugin-singlefile": "^2.1.0",
     "vue-tsc": "^2.2.0"
+  },
+  "engines": {
+    "node": ">=22.18"
   }
 }

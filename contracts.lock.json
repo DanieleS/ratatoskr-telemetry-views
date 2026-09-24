@@ -1,0 +1,14 @@
+{
+  "source": {
+    "repository": "scry-profiles",
+    "path": "../scry-profiles",
+    "commit": "c2b014d86a7b3f426b6c44a87b0d8e401e84fb27"
+  },
+  "contracts": [
+    "sea-of-stars"
+  ],
+  "files": {
+    "contracts/sea-of-stars/2.0.schema.json": "5717ac2376fc3c93ec427d83f3623cb7537bbc5a5f8725f0fdb726b0b3079d91",
+    "fixtures/sea-of-stars/2.0/steam-first-tick.json": "87295be7372a4b0a9ada10abaa68f4d1b1a98ca8bcaa09089d9a47cba85c768e"
+  }
+}

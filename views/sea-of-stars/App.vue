@@ -4,19 +4,27 @@
  *
  * The scene is chosen by the game's own state, not by anything the viewer does — the panel takes
  * touches but never focus, so there is no navigation to be had beyond the tabs inside a scene.
+ *
+ * Above all of that sits the contract check: a stream this view was not written for gets a
+ * refusal and nothing else, not a best effort over values of a shape it does not know.
  */
 import Banner from './components/Banner.vue';
 import IdleScene from './components/IdleScene.vue';
 import VoyageScene from './components/VoyageScene.vue';
 import BattleScene from './components/BattleScene.vue';
+import Unsupported from './components/Unsupported.vue';
 import { meta, scene } from './domain/game';
 </script>
 
 <template>
-  <div class="view" :class="{ 'view--gone': meta.gone }">
+  <div class="view" :class="{ 'view--gone': meta.gone }" :data-state="meta.unsupported ? 'unsupported' : scene">
     <div class="stars" />
 
-    <div class="stage">
+    <div v-if="meta.unsupported" class="stage">
+      <Unsupported :reason="meta.unsupported" />
+    </div>
+
+    <div v-else class="stage">
       <Banner />
 
       <!-- out-in, because both scenes are full-height: overlapping them would make the panel jump. -->

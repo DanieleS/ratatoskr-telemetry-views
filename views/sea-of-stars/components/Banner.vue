@@ -3,25 +3,29 @@
  * The line across the top, the way the game's menus have it: one sentence about right now, and a
  * counter to its right.
  *
- * The counter wants to be gold. The profile has no gold watch yet, so until one appears it shows
- * unspent XP — same slot, same shape, and the day `gold` starts arriving it switches over on its own.
+ * The counter wants to be gold. The contract has no gold watch, so it shows unspent XP — same slot,
+ * same shape. It used to switch to `gold` on its own the day that watch appeared; now a watch the
+ * contract does not declare does not compile, so gold arrives the honest way: a minor adds it, this
+ * view raises its range to that minor and reads it here. The coin in the template is kept for that.
  */
 import { computed } from 'vue';
 import Panel from './Panel.vue';
-import { gold, headline, progress } from '../domain/game';
-import { pulses } from '../scry/store';
+import { headline, progress } from '../domain/game';
+import { pulses } from '../stream';
 
-const counter = computed(() => {
-  if (gold.value != null) {
-    return { kind: 'gold' as const, value: gold.value, suffix: 'G', pulse: pulses['gold'] ?? 0 };
-  }
-  return {
-    kind: 'xp' as const,
-    value: progress.value.unspentXp,
-    suffix: 'XP',
-    pulse: pulses['party_progress'] ?? 0,
-  };
-});
+interface Counter {
+  kind: 'xp' | 'gold';
+  value: number | null;
+  suffix: string;
+  pulse: number;
+}
+
+const counter = computed<Counter>(() => ({
+  kind: 'xp',
+  value: progress.value.unspentXp,
+  suffix: 'XP',
+  pulse: pulses.party_progress ?? 0,
+}));
 </script>
 
 <template>

@@ -11,7 +11,7 @@
 import { createApp } from 'vue';
 import App from './App.vue';
 import './styles/theme.css';
-import { install } from './scry/store';
+import { stream } from './stream';
 
 /**
  * The design is drawn against a box this many rem on its short side.
@@ -37,7 +37,7 @@ new ResizeObserver(fit).observe(host);
 
 // Installed before mounting so the first frame cannot arrive at a page with no `window.scry` on it.
 // In practice the app waits for onPageFinished, but the ordering costs nothing to get right.
-install();
+stream.install();
 
 createApp(App).mount(host);
 

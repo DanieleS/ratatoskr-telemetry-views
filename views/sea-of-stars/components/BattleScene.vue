@@ -10,7 +10,7 @@ import Panel from './Panel.vue';
 import Gauge from './Gauge.vue';
 import Sigil from './Sigil.vue';
 import { encounterXp, enemies, party, partyVitals, resources } from '../domain/game';
-import { pulses } from '../scry/store';
+import { pulses } from '../stream';
 </script>
 
 <template>
@@ -27,7 +27,7 @@ import { pulses } from '../scry/store';
             <span class="foe__name">{{ foe.name || 'Something' }}</span>
             <span v-if="foe.level != null" class="label">LV {{ foe.level }}</span>
           </div>
-          <Gauge :value="foe.hp" :max="foe.maxHp" tone="foe" :pulse="pulses['enemies'] ?? 0"
+          <Gauge :value="foe.hp" :max="foe.maxHp" tone="foe" :pulse="pulses.enemies ?? 0"
             :falling="foe.falling" compact />
           <div class="foe__stats">
             <span><span class="label">ATK</span> {{ foe.atk ?? '—' }}</span>

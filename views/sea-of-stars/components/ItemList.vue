@@ -22,7 +22,7 @@ import { inventory } from '../domain/game';
         <p class="kind label">{{ group.title }}</p>
         <div v-for="item in group.items" :key="item.name" class="row">
           <span class="what">{{ item.name }}</span>
-          <span class="qty value">{{ item.qty }}</span>
+          <span class="qty value">{{ item.qty ?? '—' }}</span>
         </div>
       </div>
     </div>

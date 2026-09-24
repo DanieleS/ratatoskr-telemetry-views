@@ -119,6 +119,24 @@ wins over the published one. Override the package with `PACKAGE=…`, and pin th
 `ANDROID_SERIAL=…` when the Thor shows up twice under wireless debugging. Empty that folder to go back
 to the published views.
 
+## A new major keeps the old view
+
+A contract's new major means a new view, and the view for the previous major stays in the repository.
+Hosts do not all move at once: one still running a profile on `sea-of-stars 2.x` needs the `^2.0`
+view after a `^3.0` one exists. So:
+
+- **Write the new major as a new view folder**, for instance `views/sea-of-stars/` for `^3.0` while
+  the old one moves to `views/sea-of-stars-v2/`, each with its own `manifest.json`. They build to
+  different files (`sea-of-stars@2.0-3.0.html`, `sea-of-stars@3.0-4.0.html`), both go into
+  `index.json`, and the app picks the one whose range holds the version the host announces.
+- **Keep the old major's schemas vendored**, so CI goes on type-checking and testing the old view
+  against the versions it claims. A view that is published but no longer tested is how a broken one
+  reaches a device.
+- **Retire a view by deleting its folder**, once no host is expected to announce that major any
+  more. The next publish drops it from the index, and a device that had it keeps its cached copy.
+
+A new *minor* is not a new view: the view raises or keeps its range, because a minor only adds.
+
 ## What the checks do
 
 - **Lock** (`sync-contracts --check`): the vendored schemas and captures are byte-for-byte what was

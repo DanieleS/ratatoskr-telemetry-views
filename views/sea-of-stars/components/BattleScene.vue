@@ -9,8 +9,18 @@
 import Panel from './Panel.vue';
 import Gauge from './Gauge.vue';
 import Sigil from './Sigil.vue';
+import { computed } from 'vue';
 import { encounterXp, enemies, party, partyVitals, resources } from '../domain/game';
 import { pulses } from '../stream';
+
+/**
+ * How many combo pips to draw. The count comes straight from `max_combo_points`, an i32 read out of
+ * memory, and a `v-for` over a number renders that many elements: one garbage read mid-transition
+ * (2147483647 is a perfectly valid i32) and the panel freezes building two billion spans. The game's
+ * gauge holds a handful, so anything past a dozen is not a gauge worth drawing faithfully.
+ */
+const MAX_PIPS = 12;
+const pips = computed(() => Math.max(0, Math.min(MAX_PIPS, Math.floor(resources.value.maxCombo))));
 </script>
 
 <template>
@@ -60,7 +70,7 @@ import { pulses } from '../stream';
     <Panel tight class="resources">
       <div class="combo">
         <span class="label">Combo</span>
-        <span v-for="point in resources.maxCombo" :key="point" class="pip"
+        <span v-for="point in pips" :key="point" class="pip"
           :class="{ lit: point <= Math.floor(resources.combo) }">◆</span>
       </div>
       <div class="ult">

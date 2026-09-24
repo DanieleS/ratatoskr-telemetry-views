@@ -202,3 +202,7 @@ and its profiles do and do not read:
 - **M.ATK and M.DEF are computed here**, as base plus the equipped piece, because the profile derives
   only their physical counterparts.
 - **There is no gold watch.** The counter in the header shows unspent XP.
+
+## Third-party assets
+
+- `views/sea-of-stars/assets/pixelify-sans-latin.woff2` is [Pixelify Sans](https://github.com/eifetx/Pixelify-Sans), © 2021 The Pixelify Sans Project Authors, licensed under the SIL Open Font License 1.1. The licence text is in `views/sea-of-stars/assets/OFL.txt`.

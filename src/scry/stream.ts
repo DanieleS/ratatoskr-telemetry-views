@@ -31,10 +31,11 @@ export interface Accepts {
 }
 
 export interface StreamMeta {
-  /** Whether a game is attached right now. */
+  /**
+   * Whether a game is attached right now. Always true while the panel shows a view: Ratatoskr
+   * hides the view as soon as nothing is attached, so a view never has to draw that state.
+   */
   attached: boolean;
-  /** A game was attached and is now gone; what is on screen is history. */
-  gone: boolean;
   slug: string | null;
   process: string | null;
   profile: string | null;
@@ -96,7 +97,6 @@ export function createStream<V extends object>(accepts: Accepts) {
 
   const meta = reactive<StreamMeta>({
     attached: false,
-    gone: false,
     slug: null,
     process: null,
     profile: null,
@@ -144,7 +144,6 @@ export function createStream<V extends object>(accepts: Accepts) {
 
     if (kind === 'snapshot') {
       const snapshot = isRecord(body) ? body : {};
-      meta.gone = false;
       meta.attached = snapshot['attached'] === true;
       meta.contract = identityOf(snapshot['contract']);
 
@@ -190,10 +189,11 @@ export function createStream<V extends object>(accepts: Accepts) {
       return;
     }
 
+    // Accepted so that a view never errors on it, and nothing more. Ratatoskr removes the view as
+    // soon as the game detaches, so there is no screen to draw for it.
     if (kind === 'detached') {
       identity = null;
       meta.attached = false;
-      meta.gone = true;
       meta.unsupported = null;
     }
   }

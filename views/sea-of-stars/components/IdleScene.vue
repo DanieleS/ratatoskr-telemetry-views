@@ -1,6 +1,7 @@
 <script setup lang="ts">
 /**
- * Nothing to show yet: no game attached, or a game sitting on its title screen with no party built.
+ * Nothing to show yet: the game is on its title screen or main menu, with no party built. There is
+ * no "no game" screen, because the panel never shows a view without a game attached.
  *
  * The footer is deliberately technical. This is the only screen with room for it, and it is exactly
  * the screen someone is looking at when they want to know whether the stream is alive at all — a
@@ -14,11 +15,7 @@ const contract = computed(() =>
   meta.contract ? `${meta.contract.id} ${meta.contract.version}` : null,
 );
 
-const state = computed(() => {
-  if (meta.gone) return 'The voyage ends here.';
-  if (!meta.attached) return 'No game is attached.';
-  return 'Awaiting the party.';
-});
+const state = 'Awaiting the party.';
 </script>
 
 <template>

@@ -23,6 +23,13 @@ window.scry.onFrame('snapshot' | 'diff' | 'detached', body)
 // snapshot: { attached, slug, process, profile, contract: { id, version }, values }
 ```
 
+**A view is only on screen while a game is attached.** Ratatoskr loads it from the first snapshot
+that names its contract and removes it on `detached`, or on a snapshot with `attached: false`, going
+back to the performance stats. So a view has no "no game" screen and no "the game ended" screen to
+draw, and should not have one: nobody would ever see it. `detached` still arrives, just before the
+view is removed, and a view only has to not fail on it. A game that is attached but has nothing to
+show yet, such as a title screen, is the view's to handle.
+
 Two consequences shape everything here:
 
 - **One file.** CSS, JS and the font are inlined by the build; nothing is fetched. That is why this is

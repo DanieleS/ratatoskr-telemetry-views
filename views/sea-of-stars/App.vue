@@ -17,7 +17,7 @@ import { meta, scene } from './domain/game';
 </script>
 
 <template>
-  <div class="view" :class="{ 'view--gone': meta.gone }" :data-state="meta.unsupported ? 'unsupported' : scene">
+  <div class="view" :data-state="meta.unsupported ? 'unsupported' : scene">
     <div class="stars" />
 
     <div v-if="meta.unsupported" class="stage">
@@ -37,11 +37,3 @@ import { meta, scene } from './domain/game';
   </div>
 </template>
 
-<style scoped>
-/* A detached game leaves its last numbers on screen — they are history now, and dimming says so
-   without wiping the panel to nothing. */
-.view--gone {
-  filter: saturate(0.4) brightness(0.75);
-  transition: filter 600ms ease;
-}
-</style>

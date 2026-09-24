@@ -462,16 +462,14 @@ watch(
 );
 
 export const scene = computed<Scene>(() => {
-  // No game, or a game whose party has not been built yet: the title screen and the main menu both
-  // land here, because neither has a party to draw.
+  // A game whose party has not been built yet: the title screen and the main menu both land here,
+  // because neither has a party to draw.
   if (!meta.attached || party.value.length === 0) return 'idle';
   return combatSettled.value ? 'battle' : 'voyage';
 });
 
 /** The line the header banner shows: whatever is most worth saying about right now. */
 export const headline = computed(() => {
-  if (meta.gone) return 'The stream has ended.';
-  if (!meta.attached) return 'Waiting for a game…';
   if (party.value.length === 0) return 'Waiting for the party to set out…';
   if (world.value.paused) return 'Paused.';
   if (world.value.dialogs > 0) return 'Someone is talking.';

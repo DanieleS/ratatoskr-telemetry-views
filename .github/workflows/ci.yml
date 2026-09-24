@@ -1,0 +1,50 @@
+# Everything that has to hold before a view is published, on every push and pull request.
+#
+# The contract schemas are vendored (see scripts/sync-contracts.mjs), so this job needs no access
+# to scry-profiles: it checks that what is vendored still matches contracts.lock.json, that the
+# generated types are up to date with it, and then type-checks and tests every view against every
+# contract version its range covers. The built views and index.json are kept as an artifact, which
+# is what a publishing step will pick up once there is somewhere to publish to.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # 22.18 is the first release that runs the erasable TypeScript in src/scry/range.ts
+          # without a flag; the build scripts import it directly.
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx playwright install --with-deps chromium
+
+      - name: Vendored contracts match the lock
+        run: node scripts/sync-contracts.mjs --check
+
+      - name: Generated contract types are current
+        run: node scripts/gen-types.mjs --check
+
+      - name: Type-check every view against every contract version in its range
+        run: npm run typecheck
+
+      - name: Build, then load every view headless and feed it the captures, nulls, partials and extremes
+        run: npm test
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: views
+          path: |
+            dist/
+            test-results/
+          if-no-files-found: ignore

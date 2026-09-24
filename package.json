@@ -8,16 +8,20 @@
     "dev": "vite",
     "sync-contracts": "node scripts/sync-contracts.mjs",
     "gen-types": "node scripts/gen-types.mjs",
+    "typecheck": "node scripts/typecheck.mjs",
     "build": "node scripts/build.mjs",
-    "typecheck": "vue-tsc --noEmit",
+    "test": "npm run build && playwright test",
+    "check": "node scripts/sync-contracts.mjs --check && node scripts/gen-types.mjs --check && npm run typecheck && npm test",
     "push": "npm run build && ./scripts/push.sh"
   },
   "dependencies": {
     "vue": "^3.5.13"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/node": "^24.13.6",
     "@vitejs/plugin-vue": "^5.2.1",
+    "ajv": "^8.20.0",
     "json-schema-to-typescript": "^15.0.4",
     "typescript": "^5.7.2",
     "vite": "^6.0.7",

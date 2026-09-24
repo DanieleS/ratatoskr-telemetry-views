@@ -203,6 +203,30 @@ and its profiles do and do not read:
   only their physical counterparts.
 - **There is no gold watch.** The counter in the header shows unspent XP.
 
-## Third-party assets
+## Fonts
 
-- `views/sea-of-stars/assets/pixelify-sans-latin.woff2` is [Pixelify Sans](https://github.com/eifetx/Pixelify-Sans), © 2021 The Pixelify Sans Project Authors, licensed under the SIL Open Font License 1.1. The licence text is in `views/sea-of-stars/assets/OFL.txt`.
+Fonts come from npm, not from this repository. [Fontsource](https://fontsource.org) republishes
+every Google Font as a package (`@fontsource/<name>`, or `@fontsource-variable/<name>` for a
+variable font), so a view that wants one adds the package and points an `@font-face` at the
+subset it needs:
+
+```css
+@font-face {
+  font-family: 'Pixelify Sans';
+  src: url('@fontsource-variable/pixelify-sans/files/pixelify-sans-latin-wght-normal.woff2')
+    format('woff2');
+  font-weight: 400 700;
+}
+```
+
+The build inlines the file into the view like any other asset. Nothing is fetched at run time,
+which matters twice over: the panel blocks network loads, and a font request would tell a third
+party every time a game's view opened. The lockfile pins each font's version and hash, and the
+licence ships inside the package.
+
+Name the file directly rather than importing the package's CSS: that CSS declares every subset
+(cyrillic, latin-ext, …) and the build would inline all of them. A font that is not on Google
+Fonts cannot come this way; check that its licence allows redistribution before vendoring it.
+
+The Sea of Stars view uses [Pixelify Sans](https://github.com/eifetx/Pixelify-Sans) from
+`@fontsource-variable/pixelify-sans`, under the SIL Open Font License 1.1.

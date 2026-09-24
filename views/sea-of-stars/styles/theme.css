@@ -10,8 +10,11 @@
 
 @font-face {
   font-family: 'Pixelify Sans';
-  /* Inlined by the build — a view has no network to fetch a font over. */
-  src: url('../assets/pixelify-sans-latin.woff2') format('woff2');
+  /* From @fontsource-variable/pixelify-sans, latin subset only, and inlined by the build: a view
+     has no network to fetch a font over. The package's own CSS is not used because it would also
+     inline the cyrillic and latin-ext files. */
+  src: url('@fontsource-variable/pixelify-sans/files/pixelify-sans-latin-wght-normal.woff2')
+    format('woff2');
   font-weight: 400 700;
   font-display: block;
 }

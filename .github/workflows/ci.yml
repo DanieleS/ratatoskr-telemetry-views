@@ -3,8 +3,12 @@
 # The contract schemas are vendored (see scripts/sync-contracts.mjs), so this job needs no access
 # to scry-profiles: it checks that what is vendored still matches contracts.lock.json, that the
 # generated types are up to date with it, and then type-checks and tests every view against every
-# contract version its range covers. The built views and index.json are kept as an artifact, which
-# is what a publishing step will pick up once there is somewhere to publish to.
+# contract version its range covers.
+#
+# On main, and only once all of that passed, the built views and index.json are published to GitHub
+# Pages. Ratatoskr reads index.json from there and downloads only the view for the contract a game
+# announces. Pages deploys the whole site at once, so the index never names a file that is not there
+# yet.
 name: ci
 
 on:
@@ -48,3 +52,32 @@ jobs:
             dist/
             test-results/
           if-no-files-found: ignore
+
+      - name: Keep only what clients read
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p site
+          cp dist/index.json dist/*.html site/
+
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          path: site/
+
+  publish:
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    # One deploy at a time, and a newer push waits rather than cancelling one half-way.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

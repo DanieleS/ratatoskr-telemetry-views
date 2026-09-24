@@ -133,7 +133,9 @@ view after a `^3.0` one exists. So:
   against the versions it claims. A view that is published but no longer tested is how a broken one
   reaches a device.
 - **Retire a view by deleting its folder**, once no host is expected to announce that major any
-  more. The next publish drops it from the index, and a device that had it keeps its cached copy.
+  more. The next publish drops it from the index, and a device stops using it once it refreshes the
+  index, within a day, even though the file may still sit in its cache: the app picks views from the
+  index, not from whatever it has downloaded.
 
 A new *minor* is not a new view: the view raises or keeps its range, because a minor only adds.
 

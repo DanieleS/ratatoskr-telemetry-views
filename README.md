@@ -104,11 +104,20 @@ includes the version the stream announced, and the hash to check the file agains
 vendored versions inside the range at build time, which are the versions it was type-checked and
 tested against. Two views that would build to the same name fail the build.
 
-`npm run push` writes the views and the index to
-`/sdcard/Android/data/dev.kylobyte.ratatoskr.debug/files/telemetry-views/`. Override the package with
-`PACKAGE=…`, and pin the device with `ANDROID_SERIAL=…` when the Thor shows up twice under wireless
-debugging. **Until Ratatoskr's `TelemetryViewStore` looks views up by contract instead of by sanitised
-profile label, it will not find these files** — that change is on the Ratatoskr side.
+## How views reach the device
+
+**Published.** Every push to `main` that passes the checks deploys `index.json` and the built views to
+GitHub Pages, at <https://danieles.github.io/ratatoskr-telemetry-views/>. Ratatoskr reads the index
+from there and downloads only the view for the contract a game announces, never the whole catalogue.
+It keeps both in its private files and uses them offline afterwards, refetches the index at most once
+a day (and once per run for a contract the index did not know), and refuses a file whose sha256 does
+not match. Pages serves with a ten-minute cache, so a new view can take that long to be picked up.
+
+**By hand, for trying a view before publishing it.** `npm run push` builds and writes the views and the
+index to `/sdcard/Android/data/dev.kylobyte.ratatoskr.debug/files/telemetry-views/`. A view found there
+wins over the published one. Override the package with `PACKAGE=…`, and pin the device with
+`ANDROID_SERIAL=…` when the Thor shows up twice under wireless debugging. Empty that folder to go back
+to the published views.
 
 ## What the checks do
 

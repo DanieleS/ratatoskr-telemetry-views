@@ -1,0 +1,243 @@
+/*
+ * The look, borrowed from Sea of Stars' own menus: deep blue panels with a pale double edge and a
+ * small ornament at each corner, a pixel typeface, gold for names and totals, and a bright blue
+ * gradient for whatever is currently selected.
+ *
+ * Everything is sized in rem and the root font size is set from the panel's short side (see main.ts),
+ * so the whole view scales as one piece to whatever the second screen turns out to be. No media
+ * queries, no magic pixel values.
+ */
+
+@font-face {
+  font-family: 'Pixelify Sans';
+  /* Inlined by the build — a view has no network to fetch a font over. */
+  src: url('../assets/pixelify-sans-latin.woff2') format('woff2');
+  font-weight: 400 700;
+  font-display: block;
+}
+
+:root {
+  color-scheme: dark;
+
+  --ink: #eef4ff;
+  --ink-dim: #8fa8cb;
+  --ink-faint: #5f79a0;
+  --gold: #f5c451;
+  --gold-dim: #b98f33;
+
+  --deep: #081120;
+  --panel-top: #1d3a66;
+  --panel-bottom: #12274a;
+  --edge: #a6d0f2;
+  --edge-shadow: #24456f;
+  --rule: rgba(166, 208, 242, 0.22);
+
+  --select-from: #3a8ade;
+  --select-to: rgba(58, 138, 222, 0);
+
+  --hp: #74d17e;
+  --hp-low: #e8674a;
+  --sp: #7fb6f2;
+  --ult: #c79af5;
+
+  --danger: #ef6a52;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+/* The mount node. Explicitly full height, because everything below it sizes off a percentage and a
+   percentage of `auto` is `auto`: without this the view collapses to its content and sits in the top
+   of the panel, and main.ts measures the wrong side when picking a font size. */
+#view {
+  height: 100%;
+}
+
+body {
+  /* The night sky the panel sits in. The WebView itself is transparent over the app's own dark
+     surface, but a view that paints nothing would show the companion panel's chrome through it. */
+  background:
+    radial-gradient(120% 90% at 50% 0%, #14284a 0%, #0a1526 55%, #060c17 100%);
+  color: var(--ink);
+  font-family: 'Pixelify Sans', ui-monospace, monospace;
+  font-size: 1rem;
+  line-height: 1.35;
+  overflow: hidden;
+  /* Nothing here is selectable text, and a long-press that starts a selection on a touch panel is
+     pure nuisance. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* --- the starfield --------------------------------------------------------------------------- */
+
+.stars {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  /* Four sizes of star at four opacities. Static positions: a drifting sky on a panel someone
+     glances at is motion for its own sake. */
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.7) 50%, transparent 50%),
+    radial-gradient(1px 1px at 78% 8%, rgba(255, 255, 255, 0.5) 50%, transparent 50%),
+    radial-gradient(2px 2px at 34% 62%, rgba(200, 226, 255, 0.35) 50%, transparent 50%),
+    radial-gradient(1px 1px at 91% 44%, rgba(255, 255, 255, 0.45) 50%, transparent 50%),
+    radial-gradient(1px 1px at 62% 82%, rgba(255, 255, 255, 0.35) 50%, transparent 50%),
+    radial-gradient(1px 1px at 22% 90%, rgba(255, 255, 255, 0.3) 50%, transparent 50%),
+    radial-gradient(2px 2px at 55% 28%, rgba(245, 196, 81, 0.3) 50%, transparent 50%);
+}
+
+/* --- the stage ------------------------------------------------------------------------------- */
+
+.view {
+  position: relative;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.stage {
+  /* Fills the panel, whatever shape it is. There is no max-width on purpose: the root font size
+     already comes off the short side, so extra width is extra room rather than longer lines — and the
+     grids inside spend it on more columns. */
+  width: 100%;
+  height: 100%;
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 0;
+}
+
+/* --- panels ---------------------------------------------------------------------------------- */
+
+.panel {
+  position: relative;
+  background: linear-gradient(to bottom, var(--panel-top), var(--panel-bottom));
+  border: 0.125rem solid var(--edge);
+  /* The double edge: a dark line inside the pale border, and a darker halo outside it. */
+  box-shadow:
+    inset 0 0 0 0.0625rem var(--edge-shadow),
+    0 0 0 0.0625rem rgba(6, 12, 23, 0.9),
+    0 0.25rem 0.75rem rgba(4, 8, 16, 0.5);
+  padding: 0.7rem 0.85rem;
+  min-height: 0;
+}
+
+.panel--tight {
+  padding: 0.45rem 0.6rem;
+}
+
+/* The corner ornaments. Four spans rather than pseudo-elements, because there are four of them and
+   ::before/::after are already spent on the frame. */
+.corner {
+  position: absolute;
+  width: 0.65rem;
+  height: 0.65rem;
+  color: var(--edge);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.corner--tl { top: 0.1rem; left: 0.1rem; }
+.corner--tr { top: 0.1rem; right: 0.1rem; transform: scaleX(-1); }
+.corner--bl { bottom: 0.1rem; left: 0.1rem; transform: scaleY(-1); }
+.corner--br { bottom: 0.1rem; right: 0.1rem; transform: scale(-1); }
+
+/* --- type ------------------------------------------------------------------------------------ */
+
+.label {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.name {
+  color: var(--gold);
+}
+
+.dim {
+  color: var(--ink-dim);
+}
+
+.rule {
+  height: 0.0625rem;
+  background: var(--rule);
+  margin: 0.5rem 0;
+}
+
+/* A row that is currently the subject: the game's bright left-to-right sweep. */
+.selected {
+  background: linear-gradient(to right, var(--select-from), var(--select-to));
+  box-shadow: inset 0 0 0 0.0625rem rgba(214, 236, 255, 0.85);
+}
+
+/* --- scrolling ------------------------------------------------------------------------------- */
+
+/* Touch works on the panel (the presentation window is only non-focusable, not non-touchable), so
+   long lists scroll by dragging. The bar is styled because the default one is a grey slab. */
+.scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--edge-shadow) transparent;
+  min-height: 0;
+}
+
+.scroll::-webkit-scrollbar {
+  width: 0.35rem;
+}
+
+.scroll::-webkit-scrollbar-thumb {
+  background: var(--edge-shadow);
+}
+
+/* --- transitions ----------------------------------------------------------------------------- */
+
+.scene-enter-active,
+.scene-leave-active {
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.scene-enter-from {
+  opacity: 0;
+  transform: translateY(0.5rem);
+}
+
+.scene-leave-to {
+  opacity: 0;
+  transform: translateY(-0.5rem);
+}
+
+/* Keyed on a pulse counter, never on a render: the resync snapshot arrives every few seconds and
+   must not set anything off. */
+@keyframes flash-gold {
+  from { color: #fff3cd; text-shadow: 0 0 0.4rem rgba(245, 196, 81, 0.9); }
+  to { color: inherit; text-shadow: none; }
+}
+
+@keyframes flash-damage {
+  from { color: #ffd9d0; text-shadow: 0 0 0.4rem rgba(239, 106, 82, 0.9); }
+  to { color: inherit; text-shadow: none; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-0.12rem); }
+  75% { transform: translateX(0.12rem); }
+}

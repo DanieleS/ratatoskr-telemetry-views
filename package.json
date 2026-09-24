@@ -1,0 +1,23 @@
+{
+  "name": "ratatoskr-telemetry-views",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Telemetry views for Ratatoskr's companion panel. Each view builds to one self-contained HTML file.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node scripts/name.mjs",
+    "push": "npm run build && ./scripts/push.sh",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7",
+    "vite-plugin-singlefile": "^2.1.0",
+    "vue-tsc": "^2.2.0"
+  }
+}

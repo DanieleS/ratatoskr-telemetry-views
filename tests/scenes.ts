@@ -25,6 +25,24 @@ function idsOf(list: unknown): string[] {
 }
 
 export const steer: Record<string, Steer> = {
+  'ff7-rebirth': (picture) => {
+    // `party` holds three indices into `characters`; only the ones the picture's table has can
+    // name a member, and 16 is an empty slot.
+    const count = Array.isArray(picture['characters']) ? picture['characters'].length : 0;
+    const party = [0, 1, 2].map((slot) => (slot < count ? slot : 16));
+    // Out of the title screen only once a member has a max HP; give the table's records one.
+    const characters = Array.isArray(picture['characters'])
+      ? picture['characters'].map((one) =>
+          one && typeof one === 'object' && !Array.isArray(one) ? { ...one, hp_max: 1134 } : one,
+        )
+      : picture['characters'] ?? null;
+    const steps: Step[] = [
+      { name: 'field', patch: { characters, party, target_hp_pct: null, target_stagger_pct: null } },
+      { name: 'battle', patch: { characters, party, target_hp_pct: 64, target_stagger_pct: 100 } },
+      { name: 'paused', patch: { game_pause: 1, game_state: 8 } },
+    ];
+    return steps;
+  },
   'sea-of-stars': (picture) => {
     // `party` holds at most eight ids; the roster may hold more.
     const party = idsOf(picture['characters']).slice(0, 8);

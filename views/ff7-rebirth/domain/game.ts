@@ -110,17 +110,31 @@ export const target = computed(() => {
   };
 });
 
+/** ESlateVisibility values that take a widget off the screen: Collapsed and Hidden. */
+const OFF_SCREEN = [1, 2];
+
+/**
+ * Whether a battle is on: the battle HUD's party panel is on screen.
+ *
+ * The enemy bars cannot say it alone, because the last one shown stays visible after the fight. When
+ * the panel is unreadable, an enemy bar on screen is the best there is.
+ */
+export const inBattle = computed(() => {
+  const hud = finite(values.battle_hud);
+  if (hud === null) return target.value !== null;
+  return !OFF_SCREEN.includes(hud);
+});
+
 /**
  * Which screen to draw.
  *
  * The title screen reports the same game state as play (6), and even a running play time, so it is
  * told apart by its character table: before a save is loaded every record is level 1 with a max HP
- * of 0. A battle is whenever the game draws an enemy bar, because that is the only battle signal the
- * contract carries, and the one a player would recognise.
+ * of 0.
  */
 export const scene = computed<Scene>(() => {
   if (!party.value.some((member) => (member.hpMax ?? 0) > 0)) return 'title';
-  if (target.value) return 'battle';
+  if (inBattle.value) return 'battle';
   return 'field';
 });
 

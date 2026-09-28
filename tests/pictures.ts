@@ -109,7 +109,9 @@ export function ordinary(schema: Schema, next: () => number): Json {
   switch (kind(schema)) {
     case 'integer': {
       const low = Math.max(schema.minimum ?? 0, 0);
-      return maybeNull(low + Math.floor(next() * 500));
+      // Up to 500 above the floor, but never past the wire type's ceiling (a u8 stops at 255).
+      const span = Math.min(500, (schema.maximum ?? Number.MAX_SAFE_INTEGER) - low + 1);
+      return maybeNull(low + Math.floor(next() * span));
     }
     case 'number':
       return maybeNull(Math.round(next() * 10000) / 100);

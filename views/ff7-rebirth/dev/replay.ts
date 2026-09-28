@@ -5,6 +5,9 @@
  * mid-battle, paused, with an enemy locked on. Everything after the first snapshot is invented,
  * because one tick cannot show a gauge filling.
  *
+ * The capture is a 1.1 one, announced as 1.2: a minor only adds, so its values are a 1.2 picture
+ * that lacks the newer watches, and the script supplies `battle_hud` itself.
+ *
  * Excluded from the production build (see main.ts). A view has no business being able to make up
  * telemetry on a device.
  */
@@ -45,7 +48,7 @@ function snapshot() {
     slug: 'Final Fantasy VII Rebirth',
     process: attached?.process ?? 'ff7rebirth_.exe',
     profile: attached?.profile ?? null,
-    contract: attached?.contract ?? { id: manifest.contract.id, version: '1.1' },
+    contract: { id: attached?.contract?.id ?? manifest.contract.id, version: '1.2' },
     values: live,
   });
 }
@@ -74,9 +77,10 @@ function gauge(slot: number, patch: { atb?: number; limit?: number }) {
   diff({ party_gauges: gauges });
 }
 
-const field = () => diff({ target_hp_pct: null, target_stagger_pct: null, game_pause: 0, game_state: 6 });
+/** Out of battle the game leaves the last enemy bar on screen, so the target's values stay as they were. */
+const field = () => diff({ battle_hud: 1, game_pause: 0, game_state: 6 });
 const battle = (hp = 100, stagger = 0) =>
-  diff({ target_hp_pct: hp, target_stagger_pct: stagger, game_pause: 0, game_state: 6 });
+  diff({ battle_hud: 0, target_hp_pct: hp, target_stagger_pct: stagger, game_pause: 0, game_state: 6 });
 /** What the title screen really reports: level-1 records with a max HP of 0, and the clock running. */
 const title = () =>
   diff({

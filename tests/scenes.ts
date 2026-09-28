@@ -37,8 +37,10 @@ export const steer: Record<string, Steer> = {
         )
       : picture['characters'] ?? null;
     const steps: Step[] = [
-      { name: 'field', patch: { characters, party, target_hp_pct: null, target_stagger_pct: null } },
-      { name: 'battle', patch: { characters, party, target_hp_pct: 64, target_stagger_pct: 100 } },
+      { name: 'field', patch: { characters, party, battle_hud: 1, target_hp_pct: null, target_stagger_pct: null } },
+      // After a fight the last enemy bar stays on screen; the HUD panel is what says it is over.
+      { name: 'after a battle', patch: { characters, party, battle_hud: 1, target_hp_pct: 1, target_stagger_pct: 24 } },
+      { name: 'battle', patch: { characters, party, battle_hud: 4, target_hp_pct: 64, target_stagger_pct: 100 } },
       { name: 'paused', patch: { game_pause: 1, game_state: 8 } },
     ];
     return steps;

@@ -4,7 +4,7 @@ defineProps<{ reason: string }>();
 
 <template>
   <div class="unsupported">
-    <span class="caption">Contratto non supportato</span>
+    <span class="caption">Unsupported contract</span>
     <p>{{ reason }}</p>
   </div>
 </template>

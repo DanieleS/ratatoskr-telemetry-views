@@ -1,6 +1,6 @@
-# ratatoskr-telemetry-views
+# zefiro-telemetry-views
 
-A telemetry view is the page Ratatoskr draws on the companion panel while a game is streaming. This
+A telemetry view is the page Zefiro draws on the companion panel while a game is streaming. This
 repository builds them.
 
 Each view draws one **contract** — the shape of the values a game offers, defined in
@@ -16,14 +16,14 @@ Right now there is one view: `views/sea-of-stars`, reading the `sea-of-stars` co
 The panel loads a view with `loadDataWithBaseURL(null, …)`, which gives it an **opaque origin**: no
 network, no file access, no storage, no way to call back into the app. Frames go in through one
 function and nothing comes out. The envelope is typed in [`src/scry/contract.ts`](src/scry/contract.ts)
-and described in prose in Ratatoskr's `examples/telemetry-views/example.html`:
+and described in prose in Zefiro's `examples/telemetry-views/example.html`:
 
 ```js
 window.scry.onFrame('snapshot' | 'diff' | 'detached', body)
 // snapshot: { attached, slug, process, profile, contract: { id, version }, values }
 ```
 
-**A view is only on screen while a game is attached.** Ratatoskr loads it from the first snapshot
+**A view is only on screen while a game is attached.** Zefiro loads it from the first snapshot
 that names its contract and removes it on `detached`, or on a snapshot with `attached: false`, going
 back to the performance stats. So a view has no "no game" screen and no "the game ended" screen to
 draw, and should not have one: nobody would ever see it. `detached` still arrives, just before the
@@ -107,14 +107,14 @@ tested against. Two views that would build to the same name fail the build.
 ## How views reach the device
 
 **Published.** Every push to `main` that passes the checks deploys `index.json` and the built views to
-GitHub Pages, at <https://danieles.github.io/ratatoskr-telemetry-views/>. Ratatoskr reads the index
+GitHub Pages, at <https://danieles.github.io/zefiro-telemetry-views/>. Zefiro reads the index
 from there and downloads only the view for the contract a game announces, never the whole catalogue.
 It keeps both in its private files and uses them offline afterwards, refetches the index at most once
 a day (and once per run for a contract the index did not know), and refuses a file whose sha256 does
 not match. Pages serves with a ten-minute cache, so a new view can take that long to be picked up.
 
 **By hand, for trying a view before publishing it.** `npm run push` builds and writes the views and the
-index to `/sdcard/Android/data/dev.kylobyte.ratatoskr.debug/files/telemetry-views/`. A view found there
+index to `/sdcard/Android/data/dev.kylobyte.zefiro.debug/files/telemetry-views/`. A view found there
 wins over the published one. Override the package with `PACKAGE=…`, and pin the device with
 `ANDROID_SERIAL=…` when the Thor shows up twice under wireless debugging. Empty that folder to go back
 to the published views.

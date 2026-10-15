@@ -6,7 +6,7 @@
 # contract version its range covers.
 #
 # On main, and only once all of that passed, the built views and index.json are published to GitHub
-# Pages. Ratatoskr reads index.json from there and downloads only the view for the contract a game
+# Pages. Zefiro reads index.json from there and downloads only the view for the contract a game
 # announces. Pages deploys the whole site at once, so the index never names a file that is not there
 # yet.
 name: ci

@@ -32,7 +32,7 @@ export interface Accepts {
 
 export interface StreamMeta {
   /**
-   * Whether a game is attached right now. Always true while the panel shows a view: Ratatoskr
+   * Whether a game is attached right now. Always true while the panel shows a view: Zefiro
    * hides the view as soon as nothing is attached, so a view never has to draw that state.
    */
   attached: boolean;
@@ -189,7 +189,7 @@ export function createStream<V extends object>(accepts: Accepts) {
       return;
     }
 
-    // Accepted so that a view never errors on it, and nothing more. Ratatoskr removes the view as
+    // Accepted so that a view never errors on it, and nothing more. Zefiro removes the view as
     // soon as the game detaches, so there is no screen to draw for it.
     if (kind === 'detached') {
       identity = null;

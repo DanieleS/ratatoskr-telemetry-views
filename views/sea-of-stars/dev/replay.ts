@@ -1,5 +1,5 @@
 /**
- * The stand-in for Ratatoskr, so the view can be built in a browser.
+ * The stand-in for Zefiro, so the view can be built in a browser.
  *
  * It drives the real bridge — `window.scry.onFrame` — with a real capture: `scry watch` writes one
  * JSON object per event, and the fixture vendored from scry-profiles is exactly that, an `attached`

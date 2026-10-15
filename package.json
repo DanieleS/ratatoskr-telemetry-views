@@ -1,9 +1,9 @@
 {
-  "name": "ratatoskr-telemetry-views",
+  "name": "zefiro-telemetry-views",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Ratatoskr's telemetry views. Each view draws one scry contract and builds to one self-contained HTML file.",
+  "description": "Zefiro's telemetry views. Each view draws one scry contract and builds to one self-contained HTML file.",
   "scripts": {
     "dev": "vite",
     "sync-contracts": "node scripts/sync-contracts.mjs",

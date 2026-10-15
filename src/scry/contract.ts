@@ -1,5 +1,5 @@
 /**
- * The whole surface between Ratatoskr and a telemetry view.
+ * The whole surface between Zefiro and a telemetry view.
  *
  * The app calls exactly one function on the page — `window.scry.onFrame(kind, body)` — and there is
  * no way to call back: no `addJavascriptInterface`, no network, no storage. Anything this view knows,

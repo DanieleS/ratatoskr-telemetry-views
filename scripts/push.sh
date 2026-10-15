@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 #
-# Put the built views, and the index that describes them, into Ratatoskr's development folder.
+# Put the built views, and the index that describes them, into Zefiro's development folder.
 #
 # The directory is under getExternalFilesDir, which is why this needs no root: it is writable over
 # adb for the app's own package. Nothing restarts — the panel picks a view up the next time a game
 # attaches, so re-push and restart the stream to see a change.
 #
 # The files are named by contract and range (sea-of-stars@2.0-3.0.html), not by profile label. A
-# Ratatoskr whose TelemetryViewStore still looks views up by sanitised label will not find them;
+# Zefiro whose TelemetryViewStore still looks views up by sanitised label will not find them;
 # that lookup is what docs/contracts-and-views.md in scry replaces with the contract and index.json.
 set -euo pipefail
 
 # Defaults to the debug non-root build, which is the one that gets run on the Thor.
-PACKAGE="${PACKAGE:-dev.kylobyte.ratatoskr.debug}"
+PACKAGE="${PACKAGE:-dev.kylobyte.zefiro.debug}"
 DEST="/sdcard/Android/data/${PACKAGE}/files/telemetry-views"
 
 cd "$(dirname "$0")/.."

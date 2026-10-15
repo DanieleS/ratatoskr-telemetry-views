@@ -1,0 +1,83 @@
+/*
+ * The look: close to the game's own HUD without copying it. A night-blue ground, hairline frames,
+ * white figures in a plain sans, and the HUD's own colour code for the gauges — green HP turning
+ * yellow then red, pale-blue MP, sky-blue ATB that brightens when a segment is full, orange Limit,
+ * amber stagger.
+ *
+ * The view is only on screen while a game is attached, and always dark: the panel sits next to a
+ * game, not in a light room's UI.
+ */
+:root {
+  --ground: #060a12;
+  --panel: #0b1322;
+  --panel-lit: #0e1a2e;
+  --rule: #1a2940;
+  --edge: #22344d;
+  --edge-lit: #3e5f86;
+  --track: #16233a;
+
+  --ink: #f2f5f8;
+  --ink-2: #b8c5d6;
+  --ink-3: #7d8fa8;
+
+  --hp: #7bd88f;
+  --hp-low: #e8c85a;
+  --hp-danger: #ff7a59;
+  --mp: #8cb4ff;
+  --atb: #3a7fa6;
+  --atb-full: #62c9f5;
+  --limit: #f0a33c;
+  --stagger: #f5b63a;
+  --staggered: #ff5a4e;
+
+  --sans: 'Barlow', system-ui, sans-serif;
+  --figures: 'Barlow Semi Condensed', 'Barlow', system-ui, sans-serif;
+
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+#view {
+  height: 100%;
+  overflow: hidden;
+}
+
+.figures {
+  font-family: var(--figures);
+  font-variant-numeric: tabular-nums;
+}
+
+.caption {
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.scene-enter-active,
+.scene-leave-active {
+  transition: opacity 180ms ease;
+}
+
+.scene-enter-from,
+.scene-leave-to {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-enter-active,
+  .scene-leave-active {
+    transition: none;
+  }
+}
